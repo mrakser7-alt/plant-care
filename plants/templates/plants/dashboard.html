@@ -11,48 +11,53 @@
 {% if plants %}
     <div class="row g-4">
         {% for plant in plants %}
-            {% with status=plant.status days=plant.days_until_watering %}
             <div class="col-sm-6 col-lg-4">
-                <div class="card plant-card shadow-sm h-100">
+                <div class="card plant-card shadow-sm h-100 {% if not plant.is_alive %}opacity-75{% endif %}">
                     {% if plant.photo %}
                         <img src="{{ plant.photo.url }}" class="card-img-top" alt="{{ plant.name }}">
                     {% else %}
-                        <div class="card-img-top plant-placeholder">🌱</div>
+                        <div class="card-img-top plant-placeholder">{{ plant.plant_type.icon }}</div>
                     {% endif %}
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title mb-1">
                             <a href="{% url 'plant_detail' plant.pk %}" class="text-decoration-none text-dark">{{ plant.name }}</a>
                         </h5>
-                        {% if plant.species %}
-                            <p class="text-muted small mb-2">{{ plant.species }}</p>
-                        {% endif %}
+                        <p class="text-muted small mb-2">{{ plant.plant_type.icon }} {{ plant.plant_type.name }}</p>
 
-                        {% if status == 'overdue' %}
-                            <span class="badge status-badge bg-danger mb-3">🔴 Просрочено на {{ plant.overdue_days }} дн.</span>
-                        {% elif status == 'today' %}
-                            <span class="badge status-badge bg-warning text-dark mb-3">🟡 Полить сегодня!</span>
-                        {% else %}
-                            <span class="badge status-badge bg-success mb-3">🟢 Полить через {{ days }} дн.</span>
-                        {% endif %}
+                        <span class="badge status-badge {{ plant.status_css }} mb-3">{{ plant.status_label }}</span>
 
-                        <div class="mt-auto d-flex gap-2">
-                            <form method="post" action="{% url 'water_plant' plant.pk %}" class="flex-grow-1">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary w-100">💧 Я полил</button>
-                            </form>
-                            <a href="{% url 'plant_update' plant.pk %}" class="btn btn-outline-secondary">✏️</a>
+                        <div class="mt-auto d-flex gap-2 flex-wrap">
+                            {% if plant.is_alive %}
+                                <form method="post" action="{% url 'water_plant' plant.pk %}" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary w-100" title="Я полил">💧 Полить</button>
+                                </form>
+                                <form method="post" action="{% url 'repot_plant' plant.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-info" title="Пересадил">🪴</button>
+                                </form>
+                                <form method="post" action="{% url 'toggle_alive' plant.pk %}" onsubmit="return confirm('Отметить как погибшее?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-secondary" title="Погибло">💀</button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{% url 'toggle_alive' plant.pk %}" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success w-100" title="Ожило">🌱 Вернуть к жизни</button>
+                                </form>
+                            {% endif %}
+                            <a href="{% url 'plant_update' plant.pk %}" class="btn btn-outline-secondary" title="Редактировать">✏️</a>
                         </div>
                     </div>
                 </div>
             </div>
-            {% endwith %}
         {% endfor %}
     </div>
 {% else %}
     <div class="text-center py-5">
         <div class="display-1 mb-3">🌵</div>
         <h2 class="h4">Пока нет растений</h2>
-        <p class="text-muted">Добавь своё первое растение — и мы напомним, когда его полить.</p>
+        <p class="text-muted">Добавь своё первое растение — и мы напомним, когда его полить и пересадить.</p>
         <a href="{% url 'plant_create' %}" class="btn btn-success btn-lg">➕ Добавить растение</a>
     </div>
 {% endif %}

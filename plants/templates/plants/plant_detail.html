@@ -5,47 +5,62 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm {% if not plant.is_alive %}opacity-75{% endif %}">
             {% if plant.photo %}
                 <img src="{{ plant.photo.url }}" class="card-img-top" alt="{{ plant.name }}" style="max-height:400px; object-fit:cover;">
             {% else %}
-                <div class="card-img-top plant-placeholder" style="height:300px;">🌱</div>
+                <div class="card-img-top plant-placeholder" style="height:300px;">{{ plant.plant_type.icon }}</div>
             {% endif %}
             <div class="card-body p-4">
                 <h1 class="h3">{{ plant.name }}</h1>
-                {% if plant.species %}
-                    <p class="text-muted">{{ plant.species }}</p>
-                {% endif %}
+                <p class="text-muted">{{ plant.plant_type.icon }} {{ plant.plant_type.name }}{% if plant.plant_type.latin_name %} <em class="text-secondary">({{ plant.plant_type.latin_name }})</em>{% endif %}</p>
 
-                {% with status=plant.status days=plant.days_until_watering %}
-                    {% if status == 'overdue' %}
-                        <div class="alert alert-danger">🔴 Просрочено на {{ plant.overdue_days }} дн.</div>
-                    {% elif status == 'today' %}
-                        <div class="alert alert-warning">🟡 Полить сегодня!</div>
-                    {% else %}
-                        <div class="alert alert-success">🟢 Полить через {{ days }} дн. ({{ plant.next_water_date|date:"d.m.Y" }})</div>
-                    {% endif %}
-                {% endwith %}
+                <div class="alert {{ plant.status_css }} status-badge">{{ plant.status_label }}</div>
 
                 <dl class="row">
-                    <dt class="col-sm-4">Интервал полива:</dt>
-                    <dd class="col-sm-8">{{ plant.watering_interval_days }} дн.</dd>
-                    <dt class="col-sm-4">Последний полив:</dt>
-                    <dd class="col-sm-8">{{ plant.last_watered|date:"d.m.Y" }}</dd>
-                    <dt class="col-sm-4">Добавлено:</dt>
-                    <dd class="col-sm-8">{{ plant.created_at|date:"d.m.Y" }}</dd>
+                    <dt class="col-sm-5">Полив каждые:</dt>
+                    <dd class="col-sm-7">{{ plant.plant_type.watering_interval_days }} дн.</dd>
+                    <dt class="col-sm-5">Последний полив:</dt>
+                    <dd class="col-sm-7">{{ plant.last_watered|date:"d.m.Y" }} <span class="text-muted">(след. {{ plant.next_water_date|date:"d.m.Y" }})</span></dd>
+                    <dt class="col-sm-5">Пересадка каждые:</dt>
+                    <dd class="col-sm-7">{{ plant.plant_type.repotting_interval_days }} дн.</dd>
+                    <dt class="col-sm-5">Последняя пересадка:</dt>
+                    <dd class="col-sm-7">{{ plant.last_repotted|date:"d.m.Y" }} <span class="text-muted">(след. {{ plant.next_repot_date|date:"d.m.Y" }})</span></dd>
+                    <dt class="col-sm-5">Добавлено:</dt>
+                    <dd class="col-sm-7">{{ plant.created_at|date:"d.m.Y" }}</dd>
                 </dl>
 
+                {% if plant.plant_type.description %}
+                    <div class="border-start border-3 border-success ps-3 my-3 small text-secondary">
+                        {{ plant.plant_type.description }}
+                    </div>
+                {% endif %}
+
                 {% if plant.notes %}
-                    <h2 class="h6 mt-4">Заметки</h2>
+                    <h2 class="h6 mt-4">Мои заметки</h2>
                     <p class="text-secondary" style="white-space:pre-line;">{{ plant.notes }}</p>
                 {% endif %}
 
-                <div class="d-flex gap-2 mt-4">
-                    <form method="post" action="{% url 'water_plant' plant.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">💧 Я полил</button>
-                    </form>
+                <div class="d-flex gap-2 flex-wrap mt-4">
+                    {% if plant.is_alive %}
+                        <form method="post" action="{% url 'water_plant' plant.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">💧 Я полил</button>
+                        </form>
+                        <form method="post" action="{% url 'repot_plant' plant.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-info text-white">🪴 Пересадил</button>
+                        </form>
+                        <form method="post" action="{% url 'toggle_alive' plant.pk %}" onsubmit="return confirm('Отметить растение как погибшее?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-dark">💀 Погибло</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'toggle_alive' plant.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">🌱 Вернуть к жизни</button>
+                        </form>
+                    {% endif %}
                     <a href="{% url 'plant_update' plant.pk %}" class="btn btn-outline-secondary">✏️ Изменить</a>
                     <a href="{% url 'plant_delete' plant.pk %}" class="btn btn-outline-danger">🗑 Удалить</a>
                     <a href="{% url 'dashboard' %}" class="btn btn-link ms-auto">← Назад</a>

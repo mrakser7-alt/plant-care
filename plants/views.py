@@ -10,13 +10,13 @@ from .models import Plant
 
 @login_required
 def dashboard(request):
-    plants = request.user.plants.all()
+    plants = request.user.plants.select_related('plant_type').all()
     return render(request, 'plants/dashboard.html', {'plants': plants})
 
 
 @login_required
 def plant_detail(request, pk):
-    plant = get_object_or_404(Plant, pk=pk, user=request.user)
+    plant = get_object_or_404(Plant.objects.select_related('plant_type'), pk=pk, user=request.user)
     return render(request, 'plants/plant_detail.html', {'plant': plant})
 
 
@@ -62,4 +62,22 @@ def water_plant(request, pk):
     plant = get_object_or_404(Plant, pk=pk, user=request.user)
     plant.last_watered = date.today()
     plant.save(update_fields=['last_watered'])
-    return redirect('dashboard')
+    return redirect(request.META.get('HTTP_REFERER') or 'dashboard')
+
+
+@login_required
+@require_POST
+def repot_plant(request, pk):
+    plant = get_object_or_404(Plant, pk=pk, user=request.user)
+    plant.last_repotted = date.today()
+    plant.save(update_fields=['last_repotted'])
+    return redirect(request.META.get('HTTP_REFERER') or 'dashboard')
+
+
+@login_required
+@require_POST
+def toggle_alive(request, pk):
+    plant = get_object_or_404(Plant, pk=pk, user=request.user)
+    plant.is_alive = not plant.is_alive
+    plant.save(update_fields=['is_alive'])
+    return redirect(request.META.get('HTTP_REFERER') or 'dashboard')

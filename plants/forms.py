@@ -8,21 +8,25 @@ class PlantForm(forms.ModelForm):
         model = Plant
         fields = [
             'name',
-            'species',
+            'plant_type',
             'photo',
-            'watering_interval_days',
             'last_watered',
+            'last_repotted',
+            'is_alive',
             'notes',
         ]
         widgets = {
             'last_watered': forms.DateInput(attrs={'type': 'date'}),
+            'last_repotted': forms.DateInput(attrs={'type': 'date'}),
             'notes': forms.Textarea(attrs={'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for name, field in self.fields.items():
-            css = 'form-control'
-            if isinstance(field.widget, forms.ClearableFileInput):
-                css = 'form-control'
-            field.widget.attrs.setdefault('class', css)
+            if isinstance(field.widget, forms.CheckboxInput):
+                field.widget.attrs.setdefault('class', 'form-check-input')
+            elif isinstance(field.widget, forms.Select):
+                field.widget.attrs.setdefault('class', 'form-select')
+            else:
+                field.widget.attrs.setdefault('class', 'form-control')

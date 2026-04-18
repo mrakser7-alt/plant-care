@@ -12,5 +12,4 @@ staticfiles/
 .DS_Store
 *.log
 .playwright-mcp/
-login.png
-dashboard.png
+*.png
