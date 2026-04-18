@@ -1,15 +1,10 @@
 venv/
 __pycache__/
 *.pyc
-*.pyo
 db.sqlite3
-db.sqlite3-journal
 media/
-staticfiles/
 .env
 .idea/
 .vscode/
 .DS_Store
-*.log
 .playwright-mcp/
-*.png

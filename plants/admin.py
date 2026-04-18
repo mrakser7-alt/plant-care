@@ -1,3 +1,6 @@
+# регистрация моделей в админке джанги
+# после этого на /admin/ можно редактировать растения и виды
+
 from django.contrib import admin
 
 from .models import Plant, PlantType
@@ -12,5 +15,6 @@ class PlantTypeAdmin(admin.ModelAdmin):
 @admin.register(Plant)
 class PlantAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'plant_type', 'is_alive', 'last_watered', 'last_repotted')
+    # фильтры справа в списке
     list_filter = ('user', 'plant_type', 'is_alive')
     search_fields = ('name',)
